@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:meal_planner_app/pages/home_page.dart';
 
 void main() {
   runApp(MealPlannerApp());
@@ -9,7 +10,8 @@ class MealPlannerApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Meal Planner'
+      title: 'Meal Planner',
+      home: HomePage()
     );
   }
 }
