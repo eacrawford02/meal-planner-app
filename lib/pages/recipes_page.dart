@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:meal_planner_app/models/recipe_collection.dart';
+import 'package:meal_planner_app/models/recipe_model.dart';
+import 'package:meal_planner_app/widgets/recipe_card.dart';
 import 'package:provider/provider.dart';
 
 class RecipePage extends StatefulWidget {
@@ -7,6 +10,17 @@ class RecipePage extends StatefulWidget {
 }
 
 class RecipePageState extends State<RecipePage> {
+  RecipeCollection _recipeCollection;
+  Map<ValueKey<String>, RecipeModel> _recipeKeys;
+
+  @override
+  void initState() {
+    _recipeCollection = RecipeCollection();
+    _recipeKeys = Map();
+
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return CustomScrollView(
@@ -34,21 +48,34 @@ class RecipePageState extends State<RecipePage> {
             )
           ]
         ),
-        SliverGrid(
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            mainAxisSpacing: 16,
-            crossAxisSpacing: 16
-          ),
-          delegate: SliverChildBuilderDelegate(
-            (BuildContext context, int index) {
-              // TODO: implement
-            },
-            childCount: 0, // TODO: implement
-            findChildIndexCallback: (Key key) {
-                // TODO: implement
+        FutureBuilder<RecipeModel>(
+          future: _recipeCollection.loading,
+          builder: (BuildContext context, AsyncSnapshot<void> snapshot) {
+            if (snapshot.connectionState == ConnectionState.done) {
+              return SliverGrid(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 16,
+                    crossAxisSpacing: 16
+                  ),
+                delegate: SliverChildBuilderDelegate(
+                  (BuildContext context, int index) {
+                    RecipeModel data = _recipeCollection.getRecipe(index);
+                    ValueKey<String> key = ValueKey(data.name);
+                    _recipeKeys[key] = data;
+                    return RecipeCard(data, key);
+                  },
+                  childCount: _recipeCollection.collectionSize(),
+                  findChildIndexCallback: (Key key) {
+                    return _recipeCollection.getIndex(_recipeKeys[key]);
+                  }
+                )
+              );
             }
-          )
+            else {
+              return CircularProgressIndicator();
+            }
+          }
         )
       ]
     );
