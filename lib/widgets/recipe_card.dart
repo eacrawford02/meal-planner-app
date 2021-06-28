@@ -1,11 +1,17 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:meal_planner_app/models/recipe_model.dart';
 
 class RecipeCard extends StatefulWidget {
+  final RecipeModel data;
+
+  RecipeCard(this.data, ValueKey key) : super(key: key);
+
   @override
-  RecipeCardState createState() => RecipeCardState();
+  _RecipeCardState createState() => _RecipeCardState();
 }
 
-class RecipeCardState extends State<RecipeCard> {
+class _RecipeCardState extends State<RecipeCard> {
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -18,7 +24,7 @@ class RecipeCardState extends State<RecipeCard> {
           children: [
             Expanded(
               flex: 2,
-              child: Image.file(null) // TODO: get file from model
+              child: Image.file(File(widget.data.imagePath))
             ),
             Flexible(
               flex: 1,
@@ -38,21 +44,22 @@ class RecipeCardState extends State<RecipeCard> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         text: TextSpan(
-                          // TODO: get text from model - name
+                          text: widget.data.name,
                           style: TextStyle(
                             fontWeight: FontWeight.bold
                           )
                         )
                       ),
                       Text(
-                        "", // TODO: get text from model - time
+                        widget.data.getDurationS(),
                         textScaleFactor: 0.75,
                         style: TextStyle(
                           color: Colors.grey
                         )
                       ),
                       Text(
-                        "", // TODO: get text from model - serving size & kcal
+                        "${widget.data.nutrition["kcal"]} kcal \u{00B7} serves "
+                            "${widget.data.servings}",
                         textScaleFactor: 0.75,
                         style: TextStyle(
                           color: Colors.grey
