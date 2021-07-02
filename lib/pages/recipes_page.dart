@@ -10,12 +10,10 @@ class RecipePage extends StatefulWidget {
 }
 
 class RecipePageState extends State<RecipePage> {
-  RecipeCollection _recipeCollection;
   Map<ValueKey<String>, RecipeModel> _recipeKeys;
 
   @override
   void initState() {
-    _recipeCollection = RecipeCollection();
     _recipeKeys = Map();
 
     super.initState();
@@ -23,61 +21,80 @@ class RecipePageState extends State<RecipePage> {
 
   @override
   Widget build(BuildContext context) {
-    return CustomScrollView(
-      slivers: [
-        SliverAppBar(
-          pinned: true,
-          floating: false,
-          snap: false,
-          expandedHeight: 100,
-          flexibleSpace: const FlexibleSpaceBar(
-            title: Text("Recipes")
-          ),
-          actions: [
-            IconButton(
-              icon: Icon(Icons.search),
-              onPressed: () {
-                // TODO: implement (animate to fill title space of app bar)
-              }
+    return Stack(children: [
+      CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            pinned: true,
+            floating: false,
+            snap: false,
+            expandedHeight: 100,
+            flexibleSpace: const FlexibleSpaceBar(
+              title: Text("Recipes")
             ),
-            IconButton(
-              icon: Icon(Icons.filter_list),
-              onPressed: () {
-                // TODO: implement
-              }
-            )
-          ]
-        ),
-        FutureBuilder<RecipeModel>(
-          future: _recipeCollection.loading,
-          builder: (BuildContext context, AsyncSnapshot<void> snapshot) {
-            if (snapshot.connectionState == ConnectionState.done) {
-              return SliverGrid(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 16,
-                    crossAxisSpacing: 16
-                  ),
-                delegate: SliverChildBuilderDelegate(
-                  (BuildContext context, int index) {
-                    RecipeModel data = _recipeCollection.getRecipe(index);
-                    ValueKey<String> key = ValueKey(data.name);
-                    _recipeKeys[key] = data;
-                    return RecipeCard(data, key);
-                  },
-                  childCount: _recipeCollection.collectionSize(),
-                  findChildIndexCallback: (Key key) {
-                    return _recipeCollection.getIndex(_recipeKeys[key]);
+            actions: [
+              IconButton(
+                icon: Icon(Icons.search),
+                onPressed: () {
+                  // TODO: implement (animate to fill title space of app bar)
+                }
+              ),
+              IconButton(
+                icon: Icon(Icons.filter_list),
+                onPressed: () {
+                  // TODO: implement
+                }
+              )
+            ]
+          ),
+          Consumer<RecipeCollection>(
+            builder: (context, recipeCollection, child) {
+              return FutureBuilder<RecipeModel>(
+                future: recipeCollection.loading,
+                builder: (BuildContext context,
+                    AsyncSnapshot<void> snapshot) {
+                  if (snapshot.connectionState == ConnectionState.done) {
+                    return SliverGrid(
+                      gridDelegate: const
+                      SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 16,
+                          crossAxisSpacing: 16
+                      ),
+                      delegate: SliverChildBuilderDelegate(
+                        (BuildContext context, int index) {
+                          RecipeModel data = recipeCollection.getRecipe(index);
+                          ValueKey<String> key = ValueKey(data.name);
+                          _recipeKeys[key] = data;
+                          return RecipeCard(data, key);
+                        },
+                        childCount: recipeCollection.collectionSize(),
+                        findChildIndexCallback: (Key key) {
+                          return recipeCollection.getIndex(
+                              _recipeKeys[key]);
+                        }
+                      )
+                    );
                   }
-                )
+                  else {
+                    return CircularProgressIndicator();
+                  }
+                }
               );
             }
-            else {
-              return CircularProgressIndicator();
-            }
+          )
+        ]
+      ),
+      Positioned(
+        right: 16,
+        bottom: 16,
+        child: FloatingActionButton(
+          child: Icon(Icons.add),
+          onPressed: () {
+            // TODO: push empty recipe widget
           }
         )
-      ]
-    );
+      )
+    ]);
   }
 }

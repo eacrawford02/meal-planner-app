@@ -36,7 +36,8 @@ class HomePageState extends State<HomePage> {
             _index = i;
           });
         }
-      )
+      ),
+      body: _pages[_index]
     );
   }
 }
