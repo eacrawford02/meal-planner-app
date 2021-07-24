@@ -24,7 +24,7 @@ class _RecipeCardState extends State<RecipeCard> {
           children: [
             Expanded(
               flex: 2,
-              child: Image.file(File(widget.data.imagePath))
+              child: widget.data.getImage()
             ),
             Flexible(
               flex: 1,
@@ -40,14 +40,12 @@ class _RecipeCardState extends State<RecipeCard> {
                   ),
                   child: Column(
                     children: [
-                      RichText(
+                      Text(
+                        widget.data.name,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        text: TextSpan(
-                          text: widget.data.name,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold
-                          )
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold
                         )
                       ),
                       Text(

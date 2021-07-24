@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:meal_planner_app/models/recipe_collection.dart';
+import 'package:meal_planner_app/pages/recipes_page.dart';
+import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -7,7 +10,12 @@ class HomePage extends StatefulWidget {
 
 class HomePageState extends State<HomePage> {
   int _index = 0;
-  final List<Widget> _pages = []; // TODO: add screen widgets
+  final List<Widget> _pages = [
+    RecipePage(),
+    RecipePage(),
+    RecipePage()
+  ]; // TODO: add screen widgets
+  RecipeCollection _recipeCollection = RecipeCollection();
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +45,10 @@ class HomePageState extends State<HomePage> {
           });
         }
       ),
-      body: _pages[_index]
+      body: ChangeNotifierProvider.value(
+        value: _recipeCollection,
+        child: _pages[_index]
+      )
     );
   }
 }

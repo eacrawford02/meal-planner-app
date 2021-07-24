@@ -2,6 +2,8 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
 class Utils {
+  static const String placeholderImg = "assets/placeholder.png";
+
   static Future<Database> _database;
 
   static Future<Database> getDatabase() async {

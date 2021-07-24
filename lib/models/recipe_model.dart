@@ -1,3 +1,7 @@
+import 'dart:io';
+import 'package:flutter/widgets.dart';
+import 'package:meal_planner_app/utils.dart';
+
 class RecipeModel {
   String imagePath;
   String name;
@@ -5,10 +9,21 @@ class RecipeModel {
   int servings;
   List<String> ingredients;
   String instructions;
-  Map<String, int> nutrition; // TODO: safety - default value, default keys
+  Map<String, int> nutrition; // TODO: safety - more default keys
 
-  RecipeModel({this.imagePath, this.name, this.time, this.servings,
-    this.ingredients, this.instructions, this.nutrition});
+  RecipeModel({
+    this.imagePath = Utils.placeholderImg,
+    this.name = "Unnamed Recipe",
+    this.time = "0:0",
+    this.servings = 0,
+    this.ingredients,
+    this.instructions = "",
+    this.nutrition
+  }) {
+    ingredients = ingredients != null ? ingredients : [];
+    nutrition = nutrition != null ? nutrition : Map();
+    nutrition["Calories"] = 0;
+  }
 
   // Human-readable time duration format
   String getDurationS() {
@@ -24,5 +39,14 @@ class RecipeModel {
 
   void setDuration(int hours, int minutes) {
     time = "$hours:$minutes";
+  }
+
+  Image getImage() {
+    if (imagePath != Utils.placeholderImg) {
+      return Image.file(File(imagePath));
+    }
+    else {
+      return Image.asset(imagePath);
+    }
   }
 }

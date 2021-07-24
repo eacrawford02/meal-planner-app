@@ -14,7 +14,7 @@ class RecipeCollection extends ChangeNotifier {
   static final SortMetric servings = (a, b) => a.servings.compareTo(b.servings);
   int _sortOrder = ASCENDING;
   SortMetric _sortMetric = name;
-  List<RecipeModel> _recipes;
+  List<RecipeModel> _recipes = [];
   Future<void> _loading;
 
   RecipeCollection() {

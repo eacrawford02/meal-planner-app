@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:meal_planner_app/models/recipe_collection.dart';
 import 'package:meal_planner_app/models/recipe_model.dart';
 import 'package:meal_planner_app/widgets/recipe_card.dart';
@@ -49,7 +50,7 @@ class RecipePageState extends State<RecipePage> {
           ),
           Consumer<RecipeCollection>(
             builder: (context, recipeCollection, child) {
-              return FutureBuilder<RecipeModel>(
+              return FutureBuilder<void>(
                 future: recipeCollection.loading,
                 builder: (BuildContext context,
                     AsyncSnapshot<void> snapshot) {
@@ -77,7 +78,16 @@ class RecipePageState extends State<RecipePage> {
                     );
                   }
                   else {
-                    return CircularProgressIndicator();
+                    return SliverToBoxAdapter(
+                      child: Container(
+                          alignment: Alignment.center,
+                          child: SizedBox(
+                              width: 30,
+                              height: 30,
+                              child: CircularProgressIndicator()
+                          )
+                      )
+                    );
                   }
                 }
               );
@@ -91,7 +101,10 @@ class RecipePageState extends State<RecipePage> {
         child: FloatingActionButton(
           child: Icon(Icons.add),
           onPressed: () {
-            // TODO: push empty recipe widget
+            // TODO: navigate to new recipe screen
+            Provider.of<RecipeCollection>(context, listen: false).addRecipe(RecipeModel(
+              name: "${Provider.of<RecipeCollection>(context, listen: false).collectionSize()}"
+            ));
           }
         )
       )
