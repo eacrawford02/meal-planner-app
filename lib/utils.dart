@@ -17,12 +17,13 @@ class Utils {
         onCreate: (db, version) async {
           await db.execute("CREATE TABLE recipes(name TEXT PRIMARY KEY,"
               " imagePath TEXT, time TEXT, servings INTEGER, ingredients TEXT,"
-              " instructions TEXT, nutrition TEXT)"
+              " instructions TEXT)"
           );
           await db.execute("CREATE TABLE food_items(name TEXT PRIMARY KEY,"
               " category TEXT, packageSize INTEGER, servingSize INTEGER,"
               " packageUnits TEXT, calories INTEGER)"
           );
+          await db.execute("CREATE TABLE categories(name TEXT PRIMARY KEY)");
         }
       );
     }

@@ -10,7 +10,7 @@ class RecipeCollection extends ChangeNotifier {
   static const int DESCENDING = -1;
   static final SortMetric name = (a, b) => a.name.compareTo(b.name);
   static final SortMetric time =
-      (a, b) => a.getDurationI().compareTo(b.getDurationI());
+      (a, b) => a.intDuration().compareTo(b.intDuration());
   static final SortMetric servings = (a, b) => a.servings.compareTo(b.servings);
   int _sortOrder = ASCENDING;
   SortMetric _sortMetric = name;
@@ -39,7 +39,6 @@ class RecipeCollection extends ChangeNotifier {
         servings: rows[i]["servings"],
         ingredients: _parseIngredients(rows[i]["ingredients"]),
         instructions: rows[i]["instructions"],
-        nutrition: _parseNutrition(rows[i]["nutrition"])
       ));
     }
   }
@@ -53,34 +52,29 @@ class RecipeCollection extends ChangeNotifier {
         "name" : data.name,
         "time" : data.time,
         "servings" : data.servings,
-        "ingredients" : data.ingredients.join(","),
+        "ingredients" : _serializeIngredients(data.ingredients),
         "instructions" : data.instructions,
-        "nutrition" : _serializeNutrition(data.nutrition)
       },
       conflictAlgorithm: ConflictAlgorithm.replace
     );
   }
 
-  List<String> _parseIngredients(String data) {
-    return data.split(",");
-  }
-
-  Map<String, int> _parseNutrition(String data) {
-    Map<String, int> nMap = Map();
+  List<Ingredient> _parseIngredients(String data) {
+    List<Ingredient> ingredients = [];
     List<String> entries = data.split(",");
-    for (int i = 0; i < entries.length; i++) {
-      String entry = entries[i];
-      int colon = entry.indexOf(":");
-      nMap[entry.substring(0, colon)] = int.parse(entry.substring(colon + 1));
+    for (var entry in entries) {
+      List<String> values = entry.split(":");
+      Ingredient ingredient = Ingredient(values[0], values[1]);
+      ingredients.add(ingredient);
     }
-    return nMap;
+    return ingredients;
   }
 
-  String _serializeNutrition(Map<String, int> data) {
+  String _serializeIngredients(List<Ingredient> ingredients) {
     String out = "";
-    data.forEach((key, value) {
-      out = out + key + ":" + value.toString() + ",";
-    });
+    for (var ingredient in ingredients) {
+      out = out + ingredient.name + ":" + ingredient.strAmount + ",";
+    }
     return out.substring(0, out.length - 1); // Remove trailing comma
   }
 
