@@ -14,7 +14,7 @@ class RecipeModel {
   RecipeModel({
     this.imagePath = Utils.placeholderImg,
     this.name = "",
-    this.time = "",
+    this.time = "0:0",
     this.servings = 0,
     this.ingredients,
     this.instructions = "",
@@ -36,6 +36,7 @@ class RecipeModel {
   }
 
   void setDuration(int hours, int minutes) {
+    // TODO: convert minutes > 60 to hours
     time = "$hours:$minutes";
   }
 
