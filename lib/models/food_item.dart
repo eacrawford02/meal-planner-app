@@ -8,23 +8,51 @@ class FoodItem {
   static const String millilitres = "mL";
   static const String teaspoons = "tsp";
   static const String tablespoons = "tbsp";
-  Future<void> loading;
-  String name = "";
-  String category = ""; // TODO: change default value(?)
-  // Nutrition information variables (per serving size)
-  Map<String, Nutrient> nutrients = Nutrient.nutrients();
-  // Packaged amounts of the chosen food item (metric)
-  int packageSize = 0;
-  int servingSize = 0;
-  String packageUnits = grams;
-  // Default metric conversions for liquids
-  _UnitRatio _cupRatio = _UnitRatio(1, 250); // 1 cup = 250 mL
-  _UnitRatio _tspRatio = _UnitRatio(1, 5); // 1 tsp = 5 mL
-  _UnitRatio _tbspRatio = _UnitRatio(1, 15); // 1 tsp = 15 mL
+  String name;
+  String category;
+  // Nutrition information variables (per serving size unit A (metric))
+  Map<String, Nutrient> _nutrients = Nutrient.nutrients();
+  // Packaged amounts of the chosen food item (metric ONLY)
+  int packageSize;
+  String packageUnits; // Can ONLY be either grams or millilitres
+  // Standard metric conversions for liquids
+  final _UnitRatio _cupRatio = _UnitRatio(1, cup, 250, millilitres); // 1 cup = 250 mL
+  final _UnitRatio _tspRatio = _UnitRatio(1, cup, 5, millilitres); // 1 tsp = 5 mL
+  final _UnitRatio _tbspRatio = _UnitRatio(1, cup, 15, millilitres); // 1 tsp = 15 mL
+  // Serving size ratio
+  _UnitRatio _servingRatio = _UnitRatio();
 
-  FoodItem(this.name) {
-    // Load data
-    loading = _loadData();
+  // Upon instantiation of a previously saved FoodItem object, instance members
+  // cannot be safely read until 'loading' completes; however, these members
+  // can be safely written to at any time. New (unsaved) FoodItem objects do
+  // not need to wait for the completion of 'loading'
+  FoodItem({
+    this.name = "Unnamed Food Item",
+    this.category = "", // TODO: change default value(?)
+    this.packageSize = 0,
+    this.packageUnits = grams
+  });
+
+  static Future<List<String>> getAll() async {
+    final Database db = await Utils.getDatabase();
+    List<Map<String, dynamic>> rows = await db.query(
+      "food_items",
+      columns: ["name"]
+    );
+    List<String> items;
+    for (var row in rows) {
+      items.add(row["name"]);
+    }
+    return items;
+  }
+
+  static Future<void> delete(String name) async {
+    final Database db = await Utils.getDatabase();
+    await db.delete(
+      "food_items",
+      where: "name = ?",
+      whereArgs: [name]
+    );
   }
 
   Future<void> save() async {
@@ -35,30 +63,114 @@ class FoodItem {
           "name" : name,
           "category" : category,
           "packageSize" : packageSize,
-          "servingSize" : servingSize,
+          "servingSizeA" : _servingRatio.a,
+          "servingSizeB" : _servingRatio.b,
           "packageUnits" : packageUnits,
-          Nutrient.calories : nutrients[Nutrient.calories].amount
+          "servingUnitsA" : _servingRatio.unitA,
+          "servingUnitsB" : _servingRatio.unitB,
+          Nutrient.calories : _nutrients[Nutrient.calories].amount
         },
         conflictAlgorithm: ConflictAlgorithm.replace
     );
   }
 
-  // measurement is given in non-metric units (measurementUnit)
-  // equivMeasurement is given in metric units
-  void setRatio(double measurement, String measurementUnit,
-      double equivMeasurement) {
-    _UnitRatio ratioUnit = _filterUnit(measurementUnit);
-    ratioUnit.a = measurement;
-    ratioUnit.b = equivMeasurement;
+  // Sets the serving size of the FoodItem as the ratio of a non-metric unit
+  // (cups, tbsp, tsp) to a metric unit (g, mL), given by the nutrition label
+  //
+  // 'measurement' is given in non-metric units (measurementUnit)
+  // 'equivMeasurement' is given in metric units (metricUnit)
+  void setServingSize(double measurement, String measurementUnit,
+      double equivMeasurement, String metricUnit) {
+    // Ensure that unitA is in metric units and unitB in non-metric to maintain
+    // correct ratio representation when performing conversion
+    if (measurementUnit == grams || measurementUnit == millilitres) {
+      throw Exception("Error: incorrect unit '$measurementUnit' supplied to "
+          "non-metric serving size of FoodItem '$name'");
+    }
+    if (metricUnit != grams || metricUnit != millilitres) {
+      throw Exception("Error: incorrect unit '$metricUnit' supplied to "
+          "metric serving size of FoodItem '$name'");
+    }
+    // If either measurement amount is negative or zero, set to default null val
+    _servingRatio = _UnitRatio(
+      equivMeasurement <= 0 ? null : equivMeasurement,
+      metricUnit,
+      measurement <= 0 ? null : measurement,
+      measurementUnit
+    );
   }
 
-  int getAmount(Nutrient nutrient, double portionSize, String measurementUnit) {
-    _UnitRatio ratioUnit = _filterUnit(measurementUnit);
-    double ratio = nutrient.amount / servingSize;
-    return (portionSize * ratioUnit.ratio * ratio).round();
+  double getServingSize(bool metric) {
+    return metric ? _servingRatio.a : _servingRatio.b;
   }
 
-  Future<void> _loadData() async {
+  String getServingUnit(bool metric) {
+    return metric ? _servingRatio.unitA : _servingRatio.unitB;
+  }
+
+  // Sets the total amount of a specific nutrient in the serving size of this
+  // food item
+  void setAmount(String nutrient, int amount) {
+    _nutrients[nutrient].amount = amount;
+  }
+
+  // Returns the amount of a specific nutrient in a given portion size of this
+  // food item
+  // 'portionSize' is given in non-metric units (measurementUnit), i.e., the
+  // amount of an ingredient that a recipe calls for
+  int getAmount(String nutrient, double portionSize, String measurementUnit) {
+    // Nutrient density of this FoodItem; the amount of 'nutrient' per serving
+    // size
+    _UnitRatio nDensity = _UnitRatio(
+      (_nutrients[nutrient].amount).toDouble(),
+      _nutrients[_nutrients].unit,
+      _servingRatio.a,
+      _servingRatio.unitA
+    );
+    return (_convert(portionSize, measurementUnit, nDensity)).toInt();
+  }
+
+  // Works backwards from the nutrient density of the food item to recursively
+  // convert units using unit ratios until the target unit is reached. In the
+  // example conversion below, the initial argument for 'ratio' is cal/g:
+  //
+  // tbsp * mL/tbsp * cups/mL * g/cups * cal/g = cal
+  //
+  // Here, the serving ratio is g/cups
+  //
+  // Throws exception if target unit cannot be reached.
+  double _convert(double amount, String unit, _UnitRatio ratio,
+      [bool flag = false]) {
+    if (unit == ratio.unitB) {
+      // Handles start-of-chain case where 'unit' is of the same units as the
+      // denominator of the food item's nutrient density (either g or mL)
+      return amount * ratio.ab;
+    }
+    else if (unit == ratio.unitA) {
+      // Handles end-of-chain case where 'unit' is of the same units as the
+      // numerator of the standard unit conversion returned by '_filterUnit()'
+      // (one of the non-metric units; cups, tsp, tbsp)
+      return amount * ratio.ba;
+    }
+    _UnitRatio nextRatio;
+    // A metric denominator may occur twice in the conversion expression.
+    // 'flag' tracks whether or not to use the serving ratio (first occurrence)
+    // or one of the standard unit conversions (second occurrence)
+    if ((ratio.unitB == grams || ratio.unitB == millilitres) && !flag) {
+      nextRatio = _servingRatio;
+      flag = true;
+    }
+    else if ((ratio.unitB == grams || ratio.unitB == millilitres) && flag) {
+      nextRatio = _filterUnit(unit);
+    }
+    else {
+      nextRatio = _filterUnit(ratio.unitB);
+    }
+    return _convert(amount, unit, nextRatio, flag) * ratio.ab;
+  }
+
+  Future<void> loadData() async {
+    // TODO: prevent overwriting fields due to async execution of function
     final Database db = await Utils.getDatabase();
     List<Map<String, dynamic>> rows;
     try {
@@ -78,9 +190,12 @@ class FoodItem {
       name = rows[i]["name"];
       category = rows[i]["category"];
       packageSize = rows[i]["packageSize"];
-      servingSize = rows[i]["servingSize"];
+      _servingRatio.a = rows[i]["servingSizeA"];
+      _servingRatio.b = rows[i]["servingSizeB"];
       packageUnits = rows[i]["packageUnits"];
-      nutrients[Nutrient.calories].amount = rows[i][Nutrient.calories];
+      _servingRatio.unitA = rows[i]["servingUnitsA"];
+      _servingRatio.unitB = rows[i]["servingUnitsB"];
+      _nutrients[Nutrient.calories].amount = rows[i][Nutrient.calories];
     }
   }
 
@@ -121,12 +236,16 @@ class Nutrient {
   }
 }
 
+// Represents the ratio between two numbers, a and b
 class _UnitRatio {
   double a;
   double b;
-  double get ratio => b / a;
+  String unitA;
+  String unitB;
+  double get ab => a / b;
+  double get ba => b / a;
 
-  _UnitRatio(this.a, this.b);
+  _UnitRatio([this.a, this.unitA, this.b, this.unitB]);
 }
 
 // Stores a list of food item categories as strings in a single-column SQL table

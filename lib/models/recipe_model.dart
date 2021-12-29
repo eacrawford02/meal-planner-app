@@ -54,7 +54,7 @@ class RecipeModel {
   Nutrient getNutrient(String name) {
     Nutrient nutrient = Nutrient(name, 0);
     for (var ingredient in ingredients) {
-      nutrient.amount += ingredient.nutrient(name).amount;
+      nutrient.amount += ingredient.nutrient(name);
     }
     return nutrient;
   }
@@ -62,29 +62,16 @@ class RecipeModel {
 
 class Ingredient {
   FoodItem _foodItem;
-  // nWhole, numerator, and denominator are used to represent the amount of an
-  // ingredient using fractions
-  int _nWhole = 0;
-  int _numerator = 0;
-  int _denominator = 0;
+  double amount;
+  String units = FoodItem.grams;
 
   // Example of strAmount format: "1 1/2"
-  Ingredient(String name, [String strAmount]) {
-    _foodItem = FoodItem(name);
-    // If an initial amount is provided (in string format), parse and store
-    // using integer representation
-    if (strAmount != null) {
-      int space = strAmount.indexOf(" ");
-      int div = strAmount.indexOf("/");
-      _nWhole = int.parse(strAmount.substring(0, space));
-      _numerator = int.parse(strAmount.substring(space + 1, div - 1));
-      _denominator = int.parse(strAmount.substring(div + 2));
-    }
+  Ingredient(String name, [this.amount, this.units]) {
+    _foodItem = FoodItem(name: name);
+    _foodItem.loadData();
   }
 
   String get name => _foodItem.name;
-  double get dblAmount => _nWhole + _numerator / _denominator;
-  String get strAmount => "$_nWhole $_numerator / $_denominator";
 
-  Nutrient nutrient(String name) => _foodItem.nutrients[name];
+  int nutrient(String name) => _foodItem.getAmount(name, amount, units);
 }

@@ -64,16 +64,20 @@ class RecipeCollection extends ChangeNotifier {
     List<String> entries = data.split(",");
     for (var entry in entries) {
       List<String> values = entry.split(":");
-      Ingredient ingredient = Ingredient(values[0], values[1]);
+      Ingredient ingredient = Ingredient(values[0], double.parse(values[1]));
       ingredients.add(ingredient);
     }
     return ingredients;
   }
 
+  // Ingredients are serialized using the pattern name:amount:unit. The
+  // collection is stored in a single string with each individual ingredient
+  // separated by a comma
   String _serializeIngredients(List<Ingredient> ingredients) {
     String out = "";
     for (var ingredient in ingredients) {
-      out = out + ingredient.name + ":" + ingredient.strAmount + ",";
+      out = out + ingredient.name + ":" + "${ingredient.amount}" + ":" +
+          ingredient.units + ",";
     }
     return out.substring(0, out.length - 1); // Remove trailing comma
   }
