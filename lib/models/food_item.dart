@@ -33,6 +33,7 @@ class FoodItem {
     this.packageUnits = grams
   });
 
+  // Returns all food items stored in database
   static Future<List<String>> getAll() async {
     final Database db = await Utils.getDatabase();
     List<Map<String, dynamic>> rows = await db.query(
@@ -114,11 +115,15 @@ class FoodItem {
     _nutrients[nutrient].amount = amount;
   }
 
+  int getAmount(String nutrient) {
+    return _nutrients[nutrient].amount;
+  }
+
   // Returns the amount of a specific nutrient in a given portion size of this
   // food item
   // 'portionSize' is given in non-metric units (measurementUnit), i.e., the
   // amount of an ingredient that a recipe calls for
-  int getAmount(String nutrient, double portionSize, String measurementUnit) {
+  int convertAmount(String nutrient, double portionSize, String measurementUnit) {
     // Nutrient density of this FoodItem; the amount of 'nutrient' per serving
     // size
     _UnitRatio nDensity = _UnitRatio(
@@ -186,6 +191,7 @@ class FoodItem {
     if (rows.length > 1) {
       throw Exception("More than one occurrence of food item $name");
     }
+    // TODO: remove loop, replace i with 0
     for (int i = 0; i < rows.length; i++) {
       name = rows[i]["name"];
       category = rows[i]["category"];

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:fraction/fraction.dart';
 import 'package:meal_planner_app/models/food_item.dart';
+import 'package:meal_planner_app/models/serving_size.dart';
 import 'package:meal_planner_app/utils.dart';
+import 'package:meal_planner_app/widgets/serving_size_entry.dart';
+import 'package:provider/provider.dart';
 
 class FoodItemPage extends StatefulWidget {
 
@@ -20,15 +22,11 @@ class FoodItemPageState extends State<FoodItemPage> {
   bool _isNew;
   List<String> _categories;
   TextEditingController _nameText = TextEditingController();
-  // Controllers for setting the fractional size of serving size amount
-  TextEditingController _wholeA = TextEditingController();
-  TextEditingController _numA = TextEditingController();
-  TextEditingController _dnmA = TextEditingController();
-  TextEditingController _wholeB = TextEditingController();
-  TextEditingController _numB = TextEditingController();
-  TextEditingController _dnmB = TextEditingController();
-  String _unitA;
-  String _unitB;
+  ServingSizeModel _servingSizeModel;
+  double amountA;
+  String unitA;
+  double amountB;
+  String unitB;
 
   @override
   void initState() {
@@ -44,14 +42,11 @@ class FoodItemPageState extends State<FoodItemPage> {
         _data.loadData();
       }).then((value) => this.setState(() {
         _nameText.text = _data.name;
-        double amountA = _data.getServingSize(false);
-        _wholeA.text = Utils.strWhole(amountA);
-        _numA.text = Utils.strNumerator(amountA);
-        _dnmA.text = Utils.strDenominator(amountA);
-        double amountB = _data.getServingSize(true);
-        _wholeB.text = Utils.strWhole(amountB);
-        _numB.text = Utils.strNumerator(amountB);
-        _dnmB.text = Utils.strDenominator(amountB);
+        amountA = _data.getServingSize(false);
+        unitA = _data.getServingUnit(false);
+        amountB = _data.getServingSize(true);
+        unitB = _data.getServingUnit(true);
+        _servingSizeModel = ServingSizeModel(amountA, unitA, amountB, unitB);
       }));
     }
     else {
@@ -62,6 +57,7 @@ class FoodItemPageState extends State<FoodItemPage> {
         baseOffset: 0,
         extentOffset: _data.name.length
       );
+      _servingSizeModel = ServingSizeModel();
     }
 
     super.initState();
@@ -148,150 +144,32 @@ class FoodItemPageState extends State<FoodItemPage> {
         ),
         Divider(),
         // Serving size
-        _servingSizeData(
-          "Serving Size:",
-          _wholeA,
-          _numA,
-          _dnmA,
-          false,
-          _unitA,
-          _unitB
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+          child: ChangeNotifierProvider.value(
+            value: _servingSizeModel,
+            child: ServingSizeEntry(
+              entryName: "Serving Size:",
+              entryID: Entry.A,
+              amount: amountA,
+              focusNext: _isNew
+            )
+          )
         ),
-        _servingSizeData(
-          "Equivalent Serving Size:",
-          _wholeB,
-          _numB,
-          _dnmB,
-          true,
-          _unitB,
-          _unitA
+        Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            child: ChangeNotifierProvider.value(
+                value: _servingSizeModel,
+                child: ServingSizeEntry(
+                    entryName: "Equivalent Serving Size:",
+                    entryID: Entry.B,
+                    amount: amountB,
+                    focusNext: _isNew
+                )
+            )
         ),
         Divider(),
         // Nutrition info
-      ])
-    );
-  }
-
-  // TODO: move to separate file
-  Widget _servingSizeData(
-      String fieldName,
-      TextEditingController whole,
-      TextEditingController numerator,
-      TextEditingController denominator,
-      bool metric,
-      String thisUnit,
-      String otherUnit) {
-    List<String> availableUnits = [
-      FoodItem.teaspoons,
-      FoodItem.tablespoons,
-      FoodItem.cup,
-      FoodItem.cups,
-      FoodItem.grams,
-      FoodItem.millilitres
-    ];
-    if (otherUnit == FoodItem.grams || otherUnit == FoodItem.millilitres) {
-      availableUnits.remove(FoodItem.grams);
-      availableUnits.remove(FoodItem.millilitres);
-    }
-    else if (otherUnit != null) {
-      availableUnits.remove(FoodItem.teaspoons);
-      availableUnits.remove(FoodItem.tablespoons);
-      availableUnits.remove(FoodItem.cup);
-      availableUnits.remove(FoodItem.cups);
-    }
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-      child: Row(children: [
-        Padding(
-          padding: const EdgeInsets.only(right: 8),
-          child: Expanded(
-            child: Text(fieldName)
-          )
-        ),
-        Padding(
-          padding: const EdgeInsets.only(right: 8),
-          child: Focus(
-            child: TextField(
-              keyboardType: TextInputType.number,
-              controller: whole,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              decoration: InputDecoration(
-                hintText: "--"
-              ),
-              onSubmitted: (String value) {
-                if (_isNew) {
-                  Focus.of(context).nextFocus();
-                }
-              }
-            )
-          )
-        ),
-        Padding(
-          padding: const EdgeInsets.only(right: 8),
-          child: Focus(
-            child: TextField(
-              keyboardType: TextInputType.number,
-              controller: numerator,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              decoration: InputDecoration(
-                hintText: "--"
-              ),
-              onSubmitted: (String value) {
-                if (_isNew) {
-                  Focus.of(context).nextFocus();
-                }
-              }
-            )
-          )
-        ),
-        Padding(
-          padding: const EdgeInsets.only(right: 8),
-          child: Text("/")
-        ),
-        Padding(
-          padding: const EdgeInsets.only(right: 8),
-          child: Focus(
-            child: TextField(
-              keyboardType: TextInputType.number,
-              controller: denominator,
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'[1-9]'))
-              ],
-              decoration: InputDecoration(
-                hintText: "--"
-              ),
-              onSubmitted: (String value) {
-                if (_isNew) {
-                  Focus.of(context).nextFocus();
-                }
-              }
-            )
-          )
-        ),
-        Focus(
-          child: DropdownButton<String>(
-            value: _data.getServingUnit(metric),
-            hint: Text("Select Unit"),
-            underline: Container(
-              height: 2,
-              color: Theme.of(context).accentColor
-            ),
-            onChanged: (String newValue) {
-              setState(() {
-                thisUnit = newValue;
-              });
-              if (_isNew) {
-                Focus.of(context).nextFocus();
-              }
-            },
-            items: availableUnits.map((String s) {
-              return DropdownMenuItem(
-                value: s,
-                child: Text(s)
-              );
-            }).toList()
-          )
-        )
       ])
     );
   }
