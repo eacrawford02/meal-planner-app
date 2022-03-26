@@ -225,7 +225,7 @@ class Nutrient {
   static const String calories = "Calories";
   // TODO: add more
 
-  static Map<String, Nutrient> _nutrients = {
+  static final Map<String, Nutrient> _nutrients = {
     calories: Nutrient(calories, 0, "kcal") // TODO: add more
   };
 

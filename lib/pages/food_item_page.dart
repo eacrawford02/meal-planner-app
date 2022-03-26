@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:meal_planner_app/models/food_item.dart';
 import 'package:meal_planner_app/models/serving_size.dart';
 import 'package:meal_planner_app/utils.dart';
+import 'package:meal_planner_app/widgets/nutrient_entry.dart';
 import 'package:meal_planner_app/widgets/serving_size_entry.dart';
 import 'package:provider/provider.dart';
 
@@ -170,7 +171,22 @@ class FoodItemPageState extends State<FoodItemPage> {
         ),
         Divider(),
         // Nutrition info
+        Column(children: _nutrientEntries())
       ])
     );
+  }
+
+  List<Widget> _nutrientEntries() {
+    List<Widget> widgets = [];
+    List<String> nutrients = Nutrient.nutrients().keys.toList();
+    for (var nutrient in nutrients) {
+      widgets.add(
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+          child: NutrientEntry(nutrient, _data, _isNew)
+        )
+      );
+    }
+    return widgets;
   }
 }
