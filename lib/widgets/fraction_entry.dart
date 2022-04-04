@@ -66,23 +66,20 @@ class FractionEntryState extends State<FractionEntry> {
           )
         )
       ),
-      Padding(
-        padding: const EdgeInsets.only(right: 8),
-        child: Focus(
-          child: TextField(
-            keyboardType: TextInputType.number,
-            controller: _numerator,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            decoration: InputDecoration(
-              hintText: "--"
-            ),
-            onSubmitted: (String value) {
-              widget.numeratorCb(value);
-              if (widget.focusNext) {
-                Focus.of(context).nextFocus();
-              }
+      Focus(
+        child: TextField(
+          keyboardType: TextInputType.number,
+          controller: _numerator,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          decoration: InputDecoration(
+            hintText: "--"
+          ),
+          onSubmitted: (String value) {
+            widget.numeratorCb(value);
+            if (widget.focusNext) {
+              Focus.of(context).nextFocus();
             }
-          )
+          }
         )
       ),
       Padding(
@@ -112,5 +109,4 @@ class FractionEntryState extends State<FractionEntry> {
       )
     ]);
   }
-
 }

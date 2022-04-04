@@ -25,25 +25,28 @@ class ServingSizeEntryState extends State<ServingSizeEntry> {
   @override
   Widget build(BuildContext context) {
     return Row(children: [
-      FractionEntry(
-        entryName: widget.entryName,
-        amount: widget.amount,
-        focusNext: widget.focusNext,
-        wholeCb: (String value) {
-          Provider.of<ServingSizeModel>(context, listen: false).setSize(
-            widget.entryID, whole: int.parse(value)
-          );
-        },
-        numeratorCb: (String value) {
-          Provider.of<ServingSizeModel>(context, listen: false).setSize(
-            widget.entryID, numerator: int.parse(value)
-          );
-        },
-        denominatorCb: (String value) {
-          Provider.of<ServingSizeModel>(context, listen: false).setSize(
-            widget.entryID, denominator: int.parse(value)
-          );
-        },
+      Padding(
+        padding: const EdgeInsets.only(right: 8),
+        child: FractionEntry(
+          entryName: widget.entryName,
+          amount: widget.amount,
+          focusNext: widget.focusNext,
+          wholeCb: (String value) {
+            Provider.of<ServingSizeModel>(context, listen: false).setSize(
+              widget.entryID, whole: int.parse(value)
+            );
+          },
+          numeratorCb: (String value) {
+            Provider.of<ServingSizeModel>(context, listen: false).setSize(
+              widget.entryID, numerator: int.parse(value)
+            );
+          },
+          denominatorCb: (String value) {
+            Provider.of<ServingSizeModel>(context, listen: false).setSize(
+              widget.entryID, denominator: int.parse(value)
+            );
+          },
+        )
       ),
       Focus(
         child: Consumer<ServingSizeModel>(
