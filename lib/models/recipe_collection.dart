@@ -64,7 +64,10 @@ class RecipeCollection extends ChangeNotifier {
     List<String> entries = data.split(",");
     for (var entry in entries) {
       List<String> values = entry.split(":");
-      Ingredient ingredient = Ingredient(values[0], double.parse(values[1]));
+      // Amount and units may be null; name will never be null
+      double amount = values[1] == "null" ? null : double.parse(values[1]);
+      String units = values[2] == "null" ? null : values[2];
+      Ingredient ingredient = Ingredient(values[0], amount, units);
       ingredients.add(ingredient);
     }
     return ingredients;
@@ -76,8 +79,9 @@ class RecipeCollection extends ChangeNotifier {
   String _serializeIngredients(List<Ingredient> ingredients) {
     String out = "";
     for (var ingredient in ingredients) {
+      // Amount and units may be null; name will never be null
       out = out + ingredient.name + ":" + "${ingredient.amount}" + ":" +
-          ingredient.units + ",";
+          "${ingredient.units}" + ",";
     }
     return out.substring(0, out.length - 1); // Remove trailing comma
   }

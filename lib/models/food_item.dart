@@ -8,7 +8,7 @@ class FoodItem {
   static const String millilitres = "mL";
   static const String teaspoons = "tsp";
   static const String tablespoons = "tbsp";
-  String name;
+  String name; // Not null
   String category;
   // Nutrition information variables (per serving size unit A (metric))
   Map<String, Nutrient> _nutrients = Nutrient.nutrients();

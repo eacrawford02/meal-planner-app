@@ -63,7 +63,7 @@ class RecipeModel {
 class Ingredient {
   FoodItem _foodItem;
   double amount;
-  String units = FoodItem.grams;
+  String units;
 
   // Example of strAmount format: "1 1/2"
   Ingredient(String name, [this.amount, this.units]) {
@@ -73,5 +73,5 @@ class Ingredient {
 
   String get name => _foodItem.name;
 
-  int nutrient(String name) => _foodItem.getAmount(name, amount, units);
+  int nutrient(String name) => _foodItem.convertAmount(name, amount, units);
 }

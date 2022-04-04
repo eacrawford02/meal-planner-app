@@ -30,12 +30,24 @@ class ServingSizeModel extends ChangeNotifier {
     var model = _entry(entry);
     model.whole = whole;
     model.numerator = numerator;
-    model.denominator = denominator;
+    model.denominator = denominator == 0 ? null : denominator;
   }
 
   double getSize(Entry entry) {
     var model = _entry(entry);
-    return model.whole + model.numerator / model.denominator;
+    if (model.whole != null && model.numerator != null && model.denominator !=
+        null) {
+      return model.whole + model.numerator / model.denominator;
+    }
+    else if (model.numerator != null && model.denominator != null) {
+      return model.numerator / model.denominator;
+    }
+    else if (model.whole != null) {
+      return model.whole.toDouble();
+    }
+    else {
+      return null;
+    }
   }
 
   void setUnit(Entry entry, String unit) {
