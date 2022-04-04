@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:meal_planner_app/models/serving_size.dart';
-import 'package:meal_planner_app/utils.dart';
+import 'package:meal_planner_app/widgets/fraction_entry.dart';
 import 'package:provider/provider.dart';
 
 class ServingSizeEntry extends StatefulWidget {
@@ -22,88 +21,29 @@ class ServingSizeEntry extends StatefulWidget {
 }
 
 class ServingSizeEntryState extends State<ServingSizeEntry> {
-  // Controllers for setting the fractional size of serving size amount
-  TextEditingController _whole = TextEditingController();
-  TextEditingController _numerator = TextEditingController();
-  TextEditingController _denominator = TextEditingController();
-
-  @override
-  void initState() {
-    _whole.text = Utils.strWhole(widget.amount);
-    _numerator.text = Utils.strNumerator(widget.amount);
-    _denominator.text = Utils.strDenominator(widget.amount);
-
-    super.initState();
-  }
 
   @override
   Widget build(BuildContext context) {
-    Row(children: [
-      Padding(
-        padding: const EdgeInsets.only(right: 8),
-        child: Expanded(
-          child: Text(widget.entryName)
-        )
-      ),
-      Padding(
-        padding: const EdgeInsets.only(right: 8),
-        child: Focus(
-          child: TextField(
-            keyboardType: TextInputType.number,
-            controller: _whole,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            decoration: InputDecoration(
-              hintText: "--"
-            ),
-            onSubmitted: (String value) {
-              if (widget.focusNext) {
-                Focus.of(context).nextFocus();
-              }
-            }
-          )
-        )
-      ),
-      Padding(
-        padding: const EdgeInsets.only(right: 8),
-        child: Focus(
-          child: TextField(
-            keyboardType: TextInputType.number,
-            controller: _numerator,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            decoration: InputDecoration(
-              hintText: "--"
-            ),
-            onSubmitted: (String value) {
-              if (widget.focusNext) {
-                Focus.of(context).nextFocus();
-              }
-            }
-          )
-        )
-      ),
-      Padding(
-        padding: const EdgeInsets.only(right: 8),
-        child: Text("/")
-      ),
-      Padding(
-        padding: const EdgeInsets.only(right: 8),
-        child: Focus(
-          child: TextField(
-            keyboardType: TextInputType.number,
-            controller: _denominator,
-            inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'[1-9]'))
-            ],
-            decoration: InputDecoration(
-              hintText: "--"
-            ),
-            onSubmitted: (String value) {
-              if (widget.focusNext) {
-                Focus.of(context).nextFocus();
-              }
-            }
-          )
-        )
+    return Row(children: [
+      FractionEntry(
+        entryName: widget.entryName,
+        amount: widget.amount,
+        focusNext: widget.focusNext,
+        wholeCb: (String value) {
+          Provider.of<ServingSizeModel>(context, listen: false).setSize(
+            widget.entryID, whole: int.parse(value)
+          );
+        },
+        numeratorCb: (String value) {
+          Provider.of<ServingSizeModel>(context, listen: false).setSize(
+            widget.entryID, numerator: int.parse(value)
+          );
+        },
+        denominatorCb: (String value) {
+          Provider.of<ServingSizeModel>(context, listen: false).setSize(
+            widget.entryID, denominator: int.parse(value)
+          );
+        },
       ),
       Focus(
         child: Consumer<ServingSizeModel>(
