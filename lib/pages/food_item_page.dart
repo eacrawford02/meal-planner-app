@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:meal_planner_app/models/food_item.dart';
 import 'package:meal_planner_app/models/serving_size.dart';
-import 'package:meal_planner_app/utils.dart';
 import 'package:meal_planner_app/widgets/nutrient_entry.dart';
 import 'package:meal_planner_app/widgets/serving_size_entry.dart';
 import 'package:provider/provider.dart';
@@ -71,15 +70,21 @@ class FoodItemPageState extends State<FoodItemPage> {
         leading: IconButton(
           icon: Icon(Icons.clear),
           onPressed: () {
-            // TODO: close page
+            Navigator.pop<String>(context, null);
           }
         ),
         title: Text(_isNew ? "Add New Food Item" : "Edit Food Item"),
         actions: [TextButton(
           child: Text("Save"),
           onPressed: () {
+            _data.setServingSize(
+              _servingSizeModel.getSize(Entry.A),
+              _servingSizeModel.getUnit(Entry.A),
+              _servingSizeModel.getSize(Entry.B),
+              _servingSizeModel.getUnit(Entry.B)
+            );
             _data.save();
-            // TODO: close page
+            Navigator.pop<String>(context, _data.name);
           },
         )]
       ),
@@ -110,6 +115,7 @@ class FoodItemPageState extends State<FoodItemPage> {
             )
           ])
         ),
+        Divider(),
         // Category
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
