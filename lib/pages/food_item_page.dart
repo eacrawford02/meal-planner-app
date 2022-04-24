@@ -20,6 +20,9 @@ class FoodItemPageState extends State<FoodItemPage> {
 
   FoodItem _data;
   bool _isNew;
+  FocusNode _entryAFocus;
+  FocusNode _entryBFocus;
+  List<FocusNode> _nutrientFocus;
   List<String> _categories;
   TextEditingController _nameText = TextEditingController();
   ServingSizeModel _servingSizeModel;
@@ -30,7 +33,13 @@ class FoodItemPageState extends State<FoodItemPage> {
 
   @override
   void initState() {
+    _entryAFocus = FocusNode();
+    _entryBFocus = FocusNode();
+    _nutrientFocus = List.generate(
+      Nutrient.nutrients().length, (index) => FocusNode()
+    );
     // Get categories asynchronously and then rebuild widget once acquired
+    _categories = [];
     Future(() async {
       _categories = await Categories.getCategories();
     }).then((value) => this.setState(() {}));
@@ -75,6 +84,9 @@ class FoodItemPageState extends State<FoodItemPage> {
         ),
         title: Text(_isNew ? "Add New Food Item" : "Edit Food Item"),
         actions: [TextButton(
+          style: TextButton.styleFrom(
+            primary: Theme.of(context).colorScheme.onPrimary
+          ),
           child: Text("Save"),
           onPressed: () {
             _data.setServingSize(
@@ -159,21 +171,25 @@ class FoodItemPageState extends State<FoodItemPage> {
               entryName: "Serving Size:",
               entryID: Entry.A,
               amount: amountA,
-              focusNext: _isNew
+              focusNext: _isNew,
+              initialFocus: _entryAFocus,
+              nextFocus: _entryBFocus,
             )
           )
         ),
         Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-            child: ChangeNotifierProvider.value(
-                value: _servingSizeModel,
-                child: ServingSizeEntry(
-                    entryName: "Equivalent Serving Size:",
-                    entryID: Entry.B,
-                    amount: amountB,
-                    focusNext: _isNew
-                )
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+          child: ChangeNotifierProvider.value(
+            value: _servingSizeModel,
+            child: ServingSizeEntry(
+              entryName: "Equivalent Serving Size:",
+              entryID: Entry.B,
+              amount: amountB,
+              focusNext: _isNew,
+              initialFocus: _entryBFocus,
+              nextFocus: _nutrientFocus[0],
             )
+          )
         ),
         Divider(),
         // Nutrition info
@@ -182,14 +198,36 @@ class FoodItemPageState extends State<FoodItemPage> {
     );
   }
 
+  @override
+  void dispose() {
+    _entryAFocus.dispose();
+    _entryBFocus.dispose();
+    _nutrientFocus.forEach((element) => element.dispose());
+
+    super.dispose();
+  }
+
   List<Widget> _nutrientEntries() {
     List<Widget> widgets = [];
     List<String> nutrients = Nutrient.nutrients().keys.toList();
-    for (var nutrient in nutrients) {
+    for (int i = 0; i < nutrients.length; i++) {
+      bool focusNext = false;
+      FocusNode nextFocus;
+      // Ensure that the last entry doesn't try to shift focus to the next node
+      if (i < nutrients.length - 1) {
+        focusNext = _isNew;
+        nextFocus = _nutrientFocus[i + 1];
+      }
       widgets.add(
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-          child: NutrientEntry(nutrient, _data, _isNew)
+          child: NutrientEntry(
+            nutrients[i],
+            _data,
+            focusNext,
+            _nutrientFocus[i],
+            nextFocus
+          )
         )
       );
     }

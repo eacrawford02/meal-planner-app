@@ -17,6 +17,7 @@ class IngredientDialogState extends State<IngredientDialog> {
   int _whole;
   int _numerator;
   int _denominator;
+  String _unit;
   List<String> _units = [
     FoodItem.grams,
     FoodItem.millilitres,
@@ -58,7 +59,7 @@ class IngredientDialogState extends State<IngredientDialog> {
               color: Theme.of(context).accentColor
             ),
             onChanged: (String newValue) {
-              widget._ingredient.units = newValue;
+              _unit = newValue;
             },
             items: _units.map((String s) {
               return DropdownMenuItem(
@@ -89,6 +90,7 @@ class IngredientDialogState extends State<IngredientDialog> {
             else {
               widget._ingredient.amount = null;
             }
+            widget._ingredient.units = _unit;
             Navigator.of(context).pop();
           },
         )

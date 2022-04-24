@@ -6,8 +6,16 @@ class NutrientEntry extends StatefulWidget {
   final String nutrient;
   final FoodItem foodItem;
   final bool focusNext;
+  final FocusNode initialFocus;
+  final FocusNode nextFocus;
 
-  NutrientEntry(this.nutrient, this.foodItem, this.focusNext);
+  NutrientEntry(
+    this.nutrient,
+    this.foodItem,
+    this.focusNext,
+    this.initialFocus,
+    this.nextFocus
+  );
 
   @override
   NutrientEntryState createState() => NutrientEntryState();
@@ -34,10 +42,11 @@ class NutrientEntryState extends State<NutrientEntry> {
   Widget build(BuildContext context) {
     return Row(children: [
       Text(widget.nutrient),
-      Padding(
-        padding: const EdgeInsets.only(left: 8, right: 8),
-        child: Focus(
+      Expanded(
+        child: Padding(
+          padding: const EdgeInsets.only(left: 8, right: 8),
           child: TextField(
+            focusNode: widget.initialFocus,
             keyboardType: TextInputType.number,
             controller: amountText,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
@@ -47,7 +56,7 @@ class NutrientEntryState extends State<NutrientEntry> {
             onSubmitted: (String value) {
               widget.foodItem.setAmount(widget.nutrient, int.parse(value));
               if (widget.focusNext) {
-                Focus.of(context).nextFocus();
+                widget.nextFocus.requestFocus();
               }
             }
           )
@@ -55,5 +64,4 @@ class NutrientEntryState extends State<NutrientEntry> {
       )
     ]);
   }
-
 }

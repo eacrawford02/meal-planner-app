@@ -6,14 +6,20 @@ class FractionEntry extends StatefulWidget {
   final String entryName;
   final double amount;
   final bool focusNext;
+  final FocusNode initialFocus;
+  final FocusNode nextFocus;
   final Function(String) wholeCb;
   final Function(String) numeratorCb;
   final Function(String) denominatorCb;
 
+  // If `focusNext` is true, then both `initialFocus` and `nextFocus` should not
+  // be null
   FractionEntry({
     this.entryName,
     this.amount,
     this.focusNext,
+    this.initialFocus,
+    this.nextFocus,
     this.wholeCb,
     this.numeratorCb,
     this.denominatorCb,
@@ -28,12 +34,17 @@ class FractionEntryState extends State<FractionEntry> {
   TextEditingController _whole = TextEditingController();
   TextEditingController _numerator = TextEditingController();
   TextEditingController _denominator = TextEditingController();
+  FocusNode _numFocus;
+  FocusNode _dnmFocus;
+
 
   @override
   void initState() {
     _whole.text = Utils.strWhole(widget.amount);
     _numerator.text = Utils.strNumerator(widget.amount);
     _denominator.text = Utils.strDenominator(widget.amount);
+    _numFocus = FocusNode();
+    _dnmFocus = FocusNode();
 
     super.initState();
   }
@@ -41,16 +52,17 @@ class FractionEntryState extends State<FractionEntry> {
   @override
   Widget build(BuildContext context) {
     return Row(children: [
-      Padding(
-        padding: const EdgeInsets.only(right: 8),
-        child: Expanded(
+      Expanded(
+        child: Padding(
+          padding: const EdgeInsets.only(right: 8),
           child: Text(widget.entryName)
         )
       ),
-      Padding(
-        padding: const EdgeInsets.only(right: 8),
-        child: Focus(
+      Expanded(
+        child: Padding(
+          padding: const EdgeInsets.only(right: 8),
           child: TextField(
+            focusNode: widget.initialFocus,
             keyboardType: TextInputType.number,
             controller: _whole,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
@@ -60,14 +72,15 @@ class FractionEntryState extends State<FractionEntry> {
             onSubmitted: (String value) {
               widget.wholeCb(value);
               if (widget.focusNext) {
-                Focus.of(context).nextFocus();
+                _numFocus.requestFocus();
               }
             }
           )
         )
       ),
-      Focus(
+      Expanded(
         child: TextField(
+          focusNode: _numFocus,
           keyboardType: TextInputType.number,
           controller: _numerator,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
@@ -77,7 +90,7 @@ class FractionEntryState extends State<FractionEntry> {
           onSubmitted: (String value) {
             widget.numeratorCb(value);
             if (widget.focusNext) {
-              Focus.of(context).nextFocus();
+              _dnmFocus.requestFocus();
             }
           }
         )
@@ -86,13 +99,15 @@ class FractionEntryState extends State<FractionEntry> {
         padding: const EdgeInsets.only(right: 8),
         child: Text("/")
       ),
-      Padding(
-        padding: const EdgeInsets.only(right: 8),
-        child: Focus(
+      Expanded(
+        child: Padding(
+          padding: const EdgeInsets.only(right: 8),
           child: TextField(
+            focusNode: _dnmFocus,
             keyboardType: TextInputType.number,
             controller: _denominator,
             inputFormatters: [
+              // Prevent zeros from being entered
               FilteringTextInputFormatter.allow(RegExp(r'[1-9]'))
             ],
             decoration: InputDecoration(
@@ -101,12 +116,20 @@ class FractionEntryState extends State<FractionEntry> {
             onSubmitted: (String value) {
               widget.denominatorCb(value);
               if (widget.focusNext) {
-                Focus.of(context).nextFocus();
+                widget.nextFocus.requestFocus();
               }
             }
           )
         )
       )
     ]);
+  }
+
+  @override
+  void dispose() {
+    _numFocus.dispose();
+    _dnmFocus.dispose();
+
+    super.dispose();
   }
 }

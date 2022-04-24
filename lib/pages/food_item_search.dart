@@ -6,7 +6,7 @@ import 'package:meal_planner_app/models/recipe_model.dart';
 import 'package:meal_planner_app/pages/food_item_page.dart';
 import 'package:meal_planner_app/widgets/ingredient_dialog.dart';
 
-class FoodItemSearch extends SearchDelegate<String> {
+class FoodItemSearch extends SearchDelegate<Ingredient> {
 
   Future<List<String>> _foodItems;
 
@@ -39,7 +39,7 @@ class FoodItemSearch extends SearchDelegate<String> {
             cutoff: 10,
             choices: snapshot.data
           );
-          return SearchResults(results);
+          return SearchResults(results, this);
         }
         else {
           return Column();
@@ -61,8 +61,9 @@ class FoodItemSearch extends SearchDelegate<String> {
 class SearchResults extends StatefulWidget {
 
   final List<ExtractedResult<String>> _results;
+  final FoodItemSearch _delegate;
 
-  SearchResults(this._results);
+  SearchResults(this._results, this._delegate);
 
   @override
   SearchResultsState createState() => SearchResultsState();
@@ -89,12 +90,14 @@ class SearchResultsState extends State<SearchResults> {
               );
               if (editedName != null) {
                 // Open ingredient editor dialog
-                showDialog(
+                Ingredient ingredient = Ingredient(editedName);
+                await showDialog(
                   context: context,
                   builder: (BuildContext context) {
-                    return IngredientDialog(Ingredient(editedName), true);
+                    return IngredientDialog(ingredient, true);
                   }
                 );
+                widget._delegate.close(context, ingredient);
               }
             }
           );
@@ -102,14 +105,16 @@ class SearchResultsState extends State<SearchResults> {
         String itemName = widget._results[index].choice;
         return ListTile(
           title: Text(itemName),
-          onTap: () {
+          onTap: () async {
             // Open ingredient editor dialog for existing food item
-            showDialog(
+            Ingredient ingredient = Ingredient(itemName);
+            await showDialog(
               context: context,
               builder: (BuildContext context) {
-                return IngredientDialog(Ingredient(itemName), true);
+                return IngredientDialog(ingredient, true);
               }
             );
+            widget._delegate.close(context, ingredient);
           },
           onLongPress: () async {
             // Open food item editor with existing item data
@@ -121,12 +126,14 @@ class SearchResultsState extends State<SearchResults> {
             );
             if (editedName != null) {
               // Open ingredient editor dialog for edited food item
-              showDialog(
+              Ingredient ingredient = Ingredient(editedName);
+              await showDialog(
                 context: context,
                 builder: (BuildContext context) {
-                  return IngredientDialog(Ingredient(editedName), true);
+                  return IngredientDialog(ingredient, true);
                 }
               );
+              widget._delegate.close(context, ingredient);
             }
           },
           trailing: IconButton(
