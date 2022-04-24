@@ -22,6 +22,18 @@ class RecipeModel {
     ingredients = ingredients != null ? ingredients : [];
   }
 
+  RecipeModel.copy(RecipeModel source) {
+    imagePath = source.imagePath;
+    name = source.name;
+    time = source.time;
+    servings = source.servings;
+    instructions = source.instructions;
+    ingredients = [];
+    for (var element in source.ingredients) {
+      ingredients.add(Ingredient(element.name, element.amount, element.units));
+    }
+  }
+
   // Human-readable time duration format (e.g. 1 hr 25 m)
   String strDuration() {
     int i = time.indexOf(":");
