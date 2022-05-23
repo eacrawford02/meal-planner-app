@@ -16,9 +16,9 @@ class FoodItem {
   int packageSize;
   String packageUnits; // Can ONLY be either grams or millilitres
   // Standard metric conversions for liquids
-  final _UnitRatio _cupRatio = _UnitRatio(1, cup, 250, millilitres); // 1 cup = 250 mL
-  final _UnitRatio _tspRatio = _UnitRatio(1, cup, 5, millilitres); // 1 tsp = 5 mL
-  final _UnitRatio _tbspRatio = _UnitRatio(1, cup, 15, millilitres); // 1 tsp = 15 mL
+  final _UnitRatio _cupRatio = _UnitRatio(250, millilitres, 1, cup); // 1 cup = 250 mL
+  final _UnitRatio _tspRatio = _UnitRatio(5, millilitres, 1, teaspoons); // 1 tsp = 5 mL
+  final _UnitRatio _tbspRatio = _UnitRatio(15, millilitres, 1, tablespoons); // 1 tbsp = 15 mL
   // Serving size ratio
   _UnitRatio _servingRatio = _UnitRatio();
 
@@ -40,7 +40,7 @@ class FoodItem {
       "food_items",
       columns: ["name"]
     );
-    List<String> items;
+    List<String> items = [];
     for (var row in rows) {
       items.add(row["name"]);
     }
@@ -80,25 +80,37 @@ class FoodItem {
   //
   // 'measurement' is given in non-metric units (measurementUnit)
   // 'equivMeasurement' is given in metric units (metricUnit)
-  void setServingSize(double measurement, String measurementUnit,
-      double equivMeasurement, String metricUnit) {
+  void setServingSize(double amountA, String unitA, double amountB,
+      String unitB) {
     // Ensure that unitA is in metric units and unitB in non-metric to maintain
     // correct ratio representation when performing conversion
-    if (measurementUnit == grams || measurementUnit == millilitres) {
-      throw Exception("Error: incorrect unit '$measurementUnit' supplied to "
-          "non-metric serving size of FoodItem '$name'");
+    List<String> metricUnits = [grams, millilitres];
+    List<String> nonMetricUnits = [cup, cup, teaspoons, tablespoons];
+    // Ensure that unitA and unitB are different
+    if ((metricUnits.contains(unitA) && metricUnits.contains(unitB)) ||
+        (nonMetricUnits.contains(unitA) && nonMetricUnits.contains(unitB))) {
+      throw Exception("Error: units A ('$unitA') and B ('$unitB') must be "
+          "different");
     }
-    if (metricUnit != grams || metricUnit != millilitres) {
-      throw Exception("Error: incorrect unit '$metricUnit' supplied to "
-          "metric serving size of FoodItem '$name'");
+    // Store serving size information in UnitRatio object with the metric amount
+    // held in the 'a' field and the non-metric amount held in the 'b' field. If
+    // either measurement amount is negative or zero, set to default null val
+    if (metricUnits.contains(unitA)) {
+      _servingRatio = _UnitRatio(
+        amountA <= 0 ? null : amountA,
+        unitA,
+        amountB <= 0 ? null : amountB,
+        unitB
+      );
     }
-    // If either measurement amount is negative or zero, set to default null val
-    _servingRatio = _UnitRatio(
-      equivMeasurement <= 0 ? null : equivMeasurement,
-      metricUnit,
-      measurement <= 0 ? null : measurement,
-      measurementUnit
-    );
+    else if (nonMetricUnits.contains(unitA)) {
+      _servingRatio = _UnitRatio(
+        amountB <= 0 ? null : amountB,
+        unitB,
+        amountA <= 0 ? null : amountA,
+        unitA
+      );
+    }
   }
 
   double getServingSize(bool metric) {
@@ -119,59 +131,67 @@ class FoodItem {
     return _nutrients[nutrient].amount;
   }
 
-  // Returns the amount of a specific nutrient in a given portion size of this
-  // food item
-  // 'portionSize' is given in non-metric units (measurementUnit), i.e., the
-  // amount of an ingredient that a recipe calls for
+  /// Returns the amount of a specific nutrient in a given portion size of this
+  /// food item.
   int convertAmount(String nutrient, double portionSize, String measurementUnit) {
-    // Nutrient density of this FoodItem; the amount of 'nutrient' per serving
-    // size
-    _UnitRatio nDensity = _UnitRatio(
-      (_nutrients[nutrient].amount).toDouble(),
-      _nutrients[_nutrients].unit,
-      _servingRatio.a,
-      _servingRatio.unitA
-    );
-    return (_convert(portionSize, measurementUnit, nDensity)).toInt();
-  }
-
-  // Works backwards from the nutrient density of the food item to recursively
-  // convert units using unit ratios until the target unit is reached. In the
-  // example conversion below, the initial argument for 'ratio' is cal/g:
-  //
-  // tbsp * mL/tbsp * cups/mL * g/cups * cal/g = cal
-  //
-  // Here, the serving ratio is g/cups
-  //
-  // Throws exception if target unit cannot be reached.
-  double _convert(double amount, String unit, _UnitRatio ratio,
-      [bool flag = false]) {
-    if (unit == ratio.unitB) {
-      // Handles start-of-chain case where 'unit' is of the same units as the
-      // denominator of the food item's nutrient density (either g or mL)
-      return amount * ratio.ab;
+    // Check if 'measurementUnit' is one of the serving size units
+    if (measurementUnit == _servingRatio.unitA) {
+      // i.e., tbsp * cal/tbsp = cal
+      return portionSize * _nutrients[nutrient].amount ~/ _servingRatio.a;
     }
-    else if (unit == ratio.unitA) {
-      // Handles end-of-chain case where 'unit' is of the same units as the
-      // numerator of the standard unit conversion returned by '_filterUnit()'
-      // (one of the non-metric units; cups, tsp, tbsp)
-      return amount * ratio.ba;
-    }
-    _UnitRatio nextRatio;
-    // A metric denominator may occur twice in the conversion expression.
-    // 'flag' tracks whether or not to use the serving ratio (first occurrence)
-    // or one of the standard unit conversions (second occurrence)
-    if ((ratio.unitB == grams || ratio.unitB == millilitres) && !flag) {
-      nextRatio = _servingRatio;
-      flag = true;
-    }
-    else if ((ratio.unitB == grams || ratio.unitB == millilitres) && flag) {
-      nextRatio = _filterUnit(unit);
+    else if (measurementUnit == _servingRatio.unitB) {
+      return portionSize * _nutrients[nutrient].amount ~/ _servingRatio.b;
     }
     else {
-      nextRatio = _filterUnit(ratio.unitB);
+      // Perform conversion
+      // Nutrient density of this FoodItem; the amount of 'nutrient' per serving
+      // size
+      _UnitRatio nDensity = _UnitRatio(
+        (_nutrients[nutrient].amount).toDouble(),
+        _nutrients[nutrient].unit,
+        _servingRatio.a,
+        _servingRatio.unitA
+      );
+      return (_convert(portionSize, measurementUnit, nDensity)).toInt();
     }
-    return _convert(amount, unit, nextRatio, flag) * ratio.ab;
+  }
+
+  /// Converts from unit 'unit' to the target unit given in 'ratio'. In the
+  /// example conversion below, the initial argument for 'ratio' is cal/g:
+  ///
+  /// tbsp * mL/tbsp * cups/mL * g/cups * cal/g = cal
+  ///
+  /// Here, the serving ratio is g/cups.
+  ///
+  /// Throws exception if target unit cannot be reached.
+  double _convert(double amount, String unit, _UnitRatio ratio) {
+    _UnitRatio lRatio; // i.e., mL/tbsp
+    _UnitRatio rRatio; // i.e., cups/mL
+    if (unit != grams && unit != millilitres) {
+      lRatio = _filterUnit(unit);
+    }
+    else {
+      // Since lRatio.unitB is never referenced, we can initialize it to null.
+      // Initializing lRatio.b to 1 ensures that calling lRatio.ab returns
+      // amount
+      lRatio = _UnitRatio(1, unit, 1, null);
+    }
+    if (lRatio.unitA == _servingRatio.unitA) {
+      // In this case, we end up with an expression like:
+      // tbsp * mL/tbsp * mL/cups * cal/mL
+      // and thus we drop the serving ratio term to get
+      // tbsp * mL/tbsp * cal/mL
+      return amount * lRatio.ab * ratio.ab;
+    }
+    else {
+      rRatio = _filterUnit(_servingRatio.unitB);
+      if (rRatio.unitA == lRatio.unitA) {
+        return amount * lRatio.ab * rRatio.ba * _servingRatio.ab * ratio.ab;
+      }
+      else {
+        throw Exception("Could not convert from $unit to ${ratio.unitB}");
+      }
+    }
   }
 
   Future<void> loadData() async {
@@ -276,7 +296,7 @@ class Categories {
     on DatabaseException {
       rows = List.empty();
     }
-    List<String> categories;
+    List<String> categories = [];
     for (var row in rows) {
       categories.add(row["name"]);
     }
