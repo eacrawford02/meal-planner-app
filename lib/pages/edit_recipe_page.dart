@@ -154,11 +154,12 @@ class EditRecipePageState extends State<EditRecipePage> {
                     }
                   });
                 },
-                child: Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.only(
-                        left: 8 + IconTheme.of(context).size + 8
-                    ),
+                child: Padding(
+                  padding: EdgeInsets.only(
+                      left: 8 + IconTheme.of(context).size + 8
+                  ),
+                  child: const SizedBox(
+                    width: double.infinity,
                     child: Text("Add ingredient")
                   )
                 )
@@ -205,30 +206,30 @@ class EditRecipePageState extends State<EditRecipePage> {
     for (var ingredient in _data.ingredients) {
       ingredients.add(Padding(
         padding: EdgeInsets.only(
-            bottom: ingredient == _data.ingredients.last ? 0 : 8
+          bottom: ingredient == _data.ingredients.last ? 0 : 8
         ),
         child: Row(
           children: [
             Text(
               Utils.strFraction(ingredient.amount),
               style: TextStyle(
-                  fontWeight:FontWeight.bold
+                fontWeight: FontWeight.bold
               )
             ),
-            Padding(
-              padding: const EdgeInsets.only(left: 8, right: 8),
-              child: TextButton(
-                child: Expanded(
-                    child: Text(ingredient.name)
-                ),
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return IngredientDialog(ingredient, false);
-                    }
-                  );
-                }
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(left: 8, right: 8),
+                child: TextButton(
+                  child: Text(ingredient.name),
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return IngredientDialog(ingredient, false);
+                      }
+                    );
+                  }
+                )
               )
             ),
             IconButton(

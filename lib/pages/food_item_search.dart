@@ -89,6 +89,7 @@ class SearchResultsState extends State<SearchResults> {
                 )
               );
               if (editedName != null) {
+                // TODO: pass string name to dialog and have dialog return obj
                 // Open ingredient editor dialog
                 Ingredient ingredient = Ingredient(editedName);
                 await showDialog(

@@ -33,23 +33,27 @@ class IngredientDialogState extends State<IngredientDialog> {
     return AlertDialog(
       title: Text("Edit Ingredient"),
       content: Row(children: [
-        Padding(
-          padding: const EdgeInsets.only(right: 8),
-          child: FractionEntry(
-            entryName: widget._ingredient.name,
-            amount: widget._ingredient.amount,
-            focusNext: widget._focusNext,
-            wholeCb: (String value) {
-              _whole = int.parse(value);
-            },
-            numeratorCb: (String value) {
-              _numerator = int.parse(value);
-            },
-            denominatorCb: (String value) {
-              _denominator = int.parse(value) == 0 ? null : int.parse(value);
-            }
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: FractionEntry(
+              // TODO: pass focus node to fraction entry widget
+              entryName: widget._ingredient.name,
+              amount: widget._ingredient.amount,
+              focusNext: widget._focusNext,
+              wholeCb: (String value) {
+                _whole = int.parse(value);
+              },
+              numeratorCb: (String value) {
+                _numerator = int.parse(value);
+              },
+              denominatorCb: (String value) {
+                _denominator = int.parse(value) == 0 ? null : int.parse(value);
+              }
+            )
           )
         ),
+        // TODO: replace with focus node
         Focus(
           child: DropdownButton<String>(
             value: widget._ingredient.units,
@@ -63,8 +67,8 @@ class IngredientDialogState extends State<IngredientDialog> {
             },
             items: _units.map((String s) {
               return DropdownMenuItem(
-                value: s,
-                child: Text(s)
+                value: s == null ? "Select Unit" : s,
+                child: s == null ? Text("Select Unit") : Text(s)
               );
             }).toList()
           )
