@@ -45,6 +45,7 @@ class FractionEntryState extends State<FractionEntry> {
     _denominator.text = Utils.strDenominator(widget.amount);
     _numFocus = FocusNode();
     _dnmFocus = FocusNode();
+    // TODO: add text selection
 
     super.initState();
   }
@@ -69,8 +70,10 @@ class FractionEntryState extends State<FractionEntry> {
             decoration: InputDecoration(
               hintText: "--"
             ),
-            onSubmitted: (String value) {
+            onChanged: (String value) {
               widget.wholeCb(value);
+            },
+            onSubmitted: (String value) {
               if (widget.focusNext) {
                 _numFocus.requestFocus();
               }
@@ -87,8 +90,10 @@ class FractionEntryState extends State<FractionEntry> {
           decoration: InputDecoration(
             hintText: "--"
           ),
-          onSubmitted: (String value) {
+          onChanged: (String value) {
             widget.numeratorCb(value);
+          },
+          onSubmitted: (String value) {
             if (widget.focusNext) {
               _dnmFocus.requestFocus();
             }
@@ -113,8 +118,10 @@ class FractionEntryState extends State<FractionEntry> {
             decoration: InputDecoration(
               hintText: "--"
             ),
-            onSubmitted: (String value) {
+            onChanged: (String value) {
               widget.denominatorCb(value);
+            },
+            onSubmitted: (String value) {
               if (widget.focusNext) {
                 widget.nextFocus.requestFocus();
               }

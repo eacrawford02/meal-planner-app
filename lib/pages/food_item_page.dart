@@ -20,6 +20,7 @@ class FoodItemPageState extends State<FoodItemPage> {
 
   FoodItem _data;
   bool _isNew;
+  FocusNode _catFocus; // Category selection focus
   FocusNode _entryAFocus;
   FocusNode _entryBFocus;
   List<FocusNode> _nutrientFocus;
@@ -33,6 +34,7 @@ class FoodItemPageState extends State<FoodItemPage> {
 
   @override
   void initState() {
+    _catFocus = FocusNode();
     _entryAFocus = FocusNode();
     _entryBFocus = FocusNode();
     _nutrientFocus = List.generate(
@@ -79,7 +81,7 @@ class FoodItemPageState extends State<FoodItemPage> {
         leading: IconButton(
           icon: Icon(Icons.clear),
           onPressed: () {
-            Navigator.pop<String>(context, null);
+            Navigator.of(context).pop<String>(null);
           }
         ),
         title: Text(_isNew ? "Add New Food Item" : "Edit Food Item"),
@@ -96,10 +98,11 @@ class FoodItemPageState extends State<FoodItemPage> {
               _servingSizeModel.getUnit(Entry.B)
             );
             _data.save();
-            Navigator.pop<String>(context, _data.name);
+            Navigator.of(context).pop<String>(_data.name);
           },
         )]
       ),
+      // TODO: replace column with listview
       body: Column(children: [
         // Name
         Padding(
@@ -110,19 +113,17 @@ class FoodItemPageState extends State<FoodItemPage> {
               child: Text("Name:")
             ),
             Expanded(
-              child: Focus(
+              child: TextField(
                 autofocus: _isNew,
-                child: TextField(
-                  controller: _nameText,
-                  onSubmitted: (String value) {
-                    if (_nameText.text != "") {
-                      _data.name = value;
-                    }
-                    if (_isNew) {
-                      Focus.of(context).nextFocus();
-                    }
+                controller: _nameText,
+                onSubmitted: (String value) {
+                  if (_nameText.text != "") {
+                    _data.name = value;
                   }
-                )
+                  if (_isNew) {
+                    _catFocus.requestFocus();
+                  }
+                }
               )
             )
           ])
@@ -135,29 +136,28 @@ class FoodItemPageState extends State<FoodItemPage> {
             Expanded(
               child: Text("Category:")
             ),
-            Focus(
-              child: DropdownButton<String>(
-                value: _isNew ? null : _data.category,
-                hint: Text("Select Category"),
-                underline: Container(
-                  height: 2,
-                  color: Theme.of(context).accentColor
-                ),
-                onChanged: (String newValue) {
-                  setState(() {
-                    _data.category = newValue;
-                  });
-                  if (_isNew) {
-                    Focus.of(context).nextFocus();
-                  }
-                },
-                items: _categories.map<DropdownMenuItem<String>>((String s) {
-                  return DropdownMenuItem(
-                    value: s,
-                    child: Text(s)
-                  );
-                }).toList()
-              )
+            DropdownButton<String>(
+              focusNode: _catFocus,
+              value: _isNew ? null : _data.category,
+              hint: Text("Select Category"),
+              underline: Container(
+                height: 2,
+                color: Theme.of(context).accentColor
+              ),
+              onChanged: (String newValue) {
+                setState(() {
+                  _data.category = newValue;
+                });
+                if (_isNew) {
+                  _entryAFocus.requestFocus();
+                }
+              },
+              items: _categories.map<DropdownMenuItem<String>>((String s) {
+                return DropdownMenuItem(
+                  value: s,
+                  child: Text(s)
+                );
+              }).toList()
             )
           ])
         ),

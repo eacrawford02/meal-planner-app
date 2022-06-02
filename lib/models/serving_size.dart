@@ -56,6 +56,10 @@ class ServingSizeModel extends ChangeNotifier {
     model.unit = unit;
     if (unit == null) {
       otherModel.availableUnits = _metricUnits + _nonMetricUnits;
+      // Ensure that only one null value is present in the concatenated list
+      // (prevents two "Select Unit" fields from being presented in the drop
+      // down menu)
+      otherModel.availableUnits.remove(null);
     }
     else if (_metricUnits.contains(unit)) {
       otherModel.availableUnits = _nonMetricUnits;

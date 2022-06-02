@@ -33,13 +33,17 @@ class Utils {
   }
 
   // Returns string representation of a double as a fraction, e.g.
-  // 1.5 => "1 1/2" or 0.75 => "3/4"
+  // 1.5 => "1 1/2" or 0.75 => "3/4", or the string given by 'def' if there is
+  // none
   static String strFraction(double real, [String def = ""]) {
     if (real == null) {
       return def;
     }
     Fraction fraction = Fraction.fromDouble(real);
-    if (fraction.isImproper) {
+    if (fraction.isWhole) {
+      return fraction.numerator.toString();
+    }
+    else if (fraction.isImproper) {
       return fraction.toMixedFraction().toString();
     }
     else {
@@ -73,11 +77,13 @@ class Utils {
       return def;
     }
     Fraction fraction = Fraction.fromDouble(real);
-    if (fraction.isImproper) {
-      return fraction.toMixedFraction().numerator.toString();
-    }
-    else if (!fraction.isWhole) {
-      return fraction.numerator.toString();
+    if (!fraction.isWhole) {
+      if (fraction.isImproper) {
+        return fraction.toMixedFraction().numerator.toString();
+      }
+      else {
+        return fraction.numerator.toString();
+      }
     }
     else {
       return def;

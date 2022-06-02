@@ -27,7 +27,9 @@ class NutrientEntryState extends State<NutrientEntry> {
   @override
   void initState() {
     int amount = widget.foodItem.getAmount(widget.nutrient);
-    if (amount != 0) {
+    // Set initial entry text (leave default hint text "--" if the nutrient
+    // amount is 0 or null)
+    if (amount != 0 && amount != null) {
       amountText.text = "$amount";
       amountText.selection = TextSelection(
         baseOffset: 0,
@@ -54,6 +56,7 @@ class NutrientEntryState extends State<NutrientEntry> {
               hintText: "--"
             ),
             onSubmitted: (String value) {
+              // TODO: check value != "" first, refer to ingredient_dialog
               widget.foodItem.setAmount(widget.nutrient, int.parse(value));
               if (widget.focusNext) {
                 widget.nextFocus.requestFocus();

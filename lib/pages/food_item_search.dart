@@ -12,7 +12,6 @@ class FoodItemSearch extends SearchDelegate<Ingredient> {
 
   FoodItemSearch() {
     // TODO: load past queries from database
-    _foodItems = FoodItem.getAll();
   }
 
   @override
@@ -29,6 +28,11 @@ class FoodItemSearch extends SearchDelegate<Ingredient> {
 
   @override
   Widget buildResults(BuildContext context) {
+    // Reload the available food items whenever the search button is pressed.
+    // This ensures that any changes to the results (such as deleting an
+    // element) are reflected within a single search session with requiring a
+    // rebuild of the entire SearchDelegate
+    _foodItems = FoodItem.getAll();
     return FutureBuilder<List<String>>(
       future: _foodItems,
       builder: (BuildContext context, AsyncSnapshot<List<String>> snapshot) {
@@ -70,6 +74,15 @@ class SearchResults extends StatefulWidget {
 }
 
 class SearchResultsState extends State<SearchResults> {
+  NavigatorState _navigator;
+
+  @override
+  void didChangeDependencies() {
+    _navigator = Navigator.of(context);
+
+    super.didChangeDependencies();
+  }
+
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
@@ -88,17 +101,25 @@ class SearchResultsState extends State<SearchResults> {
                   builder: (BuildContext context) => FoodItemPage()
                 )
               );
+              // Add name to _results list and update state so that new food
+              // item is shown in list
+              _navigator.setState(() {
+                widget._results.insert(0, ExtractedResult(
+                  editedName, 1, 0, (String s) => editedName)
+                );
+              });
               if (editedName != null) {
-                // TODO: pass string name to dialog and have dialog return obj
                 // Open ingredient editor dialog
                 Ingredient ingredient = Ingredient(editedName);
-                await showDialog(
-                  context: context,
+                bool result = await showDialog<bool>(
+                  context: _navigator.context,
                   builder: (BuildContext context) {
                     return IngredientDialog(ingredient, true);
                   }
                 );
-                widget._delegate.close(context, ingredient);
+                if (result) {
+                  widget._delegate.close(_navigator.context, ingredient);
+                }
               }
             }
           );
@@ -109,13 +130,15 @@ class SearchResultsState extends State<SearchResults> {
           onTap: () async {
             // Open ingredient editor dialog for existing food item
             Ingredient ingredient = Ingredient(itemName);
-            await showDialog(
+            bool result = await showDialog<bool>(
               context: context,
               builder: (BuildContext context) {
                 return IngredientDialog(ingredient, true);
               }
             );
-            widget._delegate.close(context, ingredient);
+            if (result) {
+              widget._delegate.close(context, ingredient);
+            }
           },
           onLongPress: () async {
             // Open food item editor with existing item data
@@ -128,13 +151,15 @@ class SearchResultsState extends State<SearchResults> {
             if (editedName != null) {
               // Open ingredient editor dialog for edited food item
               Ingredient ingredient = Ingredient(editedName);
-              await showDialog(
-                context: context,
+              bool result = await showDialog<bool>(
+                context: _navigator.context,
                 builder: (BuildContext context) {
                   return IngredientDialog(ingredient, true);
                 }
               );
-              widget._delegate.close(context, ingredient);
+              if (result) {
+                widget._delegate.close(_navigator.context, ingredient);
+              }
             }
           },
           trailing: IconButton(

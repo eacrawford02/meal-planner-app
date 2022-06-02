@@ -32,7 +32,7 @@ class RecipeCollection extends ChangeNotifier {
       rows = List.empty();
     }
     for (int i = 0; i < rows.length; i++) {
-      addRecipe(RecipeModel(
+      insertRecipe(RecipeModel(
         imagePath: rows[i]["imagePath"],
         name: rows[i]["name"],
         time: rows[i]["time"],
@@ -94,19 +94,17 @@ class RecipeCollection extends ChangeNotifier {
     return _recipes[index];
   }
 
+  // Returns -1 if index cannot be found
   int getIndex(RecipeModel data) {
-    return _recipes.indexOf(data);
+    return _recipes.indexWhere((recipe) => recipe.name == data.name);
   }
 
-  void addRecipe(RecipeModel data) {
-    _recipes.add(data);
-    _sort();
-    notifyListeners();
-    _saveData(data);
-  }
-
-  void editRecipe(RecipeModel data) {
-    _recipes.remove(data);
+  void insertRecipe(RecipeModel data) {
+    // Remove from collection if recipe already exists (in the case of editing)
+    int prevIndex = getIndex(data);
+    if (prevIndex != -1) {
+      _recipes.remove(data);
+    }
     _recipes.add(data);
     _sort();
     notifyListeners();

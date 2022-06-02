@@ -50,17 +50,18 @@ class ServingSizeEntryState extends State<ServingSizeEntry> {
             nextFocus: _unitFocus,
             wholeCb: (String value) {
               Provider.of<ServingSizeModel>(context, listen: false).setSize(
-                widget.entryID, whole: int.parse(value)
+                widget.entryID, whole: value != "" ? int.parse(value) : null
               );
             },
             numeratorCb: (String value) {
               Provider.of<ServingSizeModel>(context, listen: false).setSize(
-                widget.entryID, numerator: int.parse(value)
+                widget.entryID, numerator: value != "" ? int.parse(value) : null
               );
             },
             denominatorCb: (String value) {
               Provider.of<ServingSizeModel>(context, listen: false).setSize(
-                widget.entryID, denominator: int.parse(value)
+                widget.entryID,
+                denominator: value != "" ? int.parse(value) : null
               );
             },
           )

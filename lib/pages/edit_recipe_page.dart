@@ -118,7 +118,11 @@ class EditRecipePageState extends State<EditRecipePage> {
                 IconButton(
                   icon: Icon(Icons.remove_circle_outline),
                   onPressed: () { // TODO: inline
-                    setState(() {_data.servings--;});
+                    setState(() {
+                      if (_data.servings > 0) {
+                        _data.servings--;
+                      }
+                    });
                   }
                 ),
                 Padding(
@@ -221,13 +225,19 @@ class EditRecipePageState extends State<EditRecipePage> {
                 padding: const EdgeInsets.only(left: 8, right: 8),
                 child: TextButton(
                   child: Text(ingredient.name),
-                  onPressed: () {
-                    showDialog(
+                  onPressed: () async {
+                    bool result = await showDialog<bool>(
                       context: context,
                       builder: (BuildContext context) {
                         return IngredientDialog(ingredient, false);
                       }
                     );
+                    setState(() {
+                      if (result) {
+                        _data.ingredients.remove(ingredient);
+                        _data.ingredients.add(ingredient);
+                      }
+                    });
                   }
                 )
               )
