@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:meal_planner_app/models/recipe_collection.dart';
 import 'package:meal_planner_app/models/recipe_model.dart';
+import 'package:meal_planner_app/pages/edit_recipe_page.dart';
 import 'package:meal_planner_app/widgets/recipe_card.dart';
 import 'package:provider/provider.dart';
 
@@ -100,11 +101,19 @@ class RecipePageState extends State<RecipePage> {
         bottom: 16,
         child: FloatingActionButton(
           child: Icon(Icons.add),
-          onPressed: () {
-            // TODO: navigate to new recipe screen
-            Provider.of<RecipeCollection>(context, listen: false).addRecipe(RecipeModel(
-              name: "${Provider.of<RecipeCollection>(context, listen: false).collectionSize()}"
-            ));
+          onPressed: () async {
+            RecipeModel recipe = await Navigator.push<RecipeModel>(
+              context,
+              MaterialPageRoute<RecipeModel>(builder: (BuildContext context) {
+                return EditRecipePage(RecipeModel());
+              })
+            );
+            if (recipe != null) {
+              RecipeCollection collection = Provider.of<RecipeCollection>(
+                context, listen: false
+              );
+              collection.insertRecipe(recipe);
+            }
           }
         )
       )

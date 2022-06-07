@@ -47,7 +47,7 @@ class EditRecipePageState extends State<EditRecipePage> {
             icon: Icon(Icons.clear),
             onPressed: () {
               // Return original recipe data to previous page
-              Navigator.of(context).pop<RecipeModel>(widget._recipeModel);
+              Navigator.of(context).pop<RecipeModel>(null);
             }
           ),
           title: Text(_data.name != _default.name ? "Edit Recipe" : "New Recipe"),
@@ -60,10 +60,6 @@ class EditRecipePageState extends State<EditRecipePage> {
               onPressed: () {
                 // Ensure that name is set
                 if (_data.name != _default.name) {
-                  RecipeCollection collection = Provider.of<RecipeCollection>(
-                      context, listen: false
-                  );
-                  collection.insertRecipe(_data);
                   // Return modified recipe model to previous page
                   Navigator.of(context).pop<RecipeModel>(_data);
                 }

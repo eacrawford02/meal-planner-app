@@ -61,7 +61,8 @@ class RecipeCollection extends ChangeNotifier {
 
   List<Ingredient> _parseIngredients(String data) {
     List<Ingredient> ingredients = [];
-    List<String> entries = data.split(",");
+    // Prevent entries from being assigned [""] if data is empty
+    List<String> entries = data != "" ? data.split(",") : [];
     for (var entry in entries) {
       List<String> values = entry.split(":");
       // Amount and units may be null; name will never be null
@@ -83,7 +84,11 @@ class RecipeCollection extends ChangeNotifier {
       out = out + ingredient.name + ":" + "${ingredient.amount}" + ":" +
           "${ingredient.units}" + ",";
     }
-    return out.substring(0, out.length - 1); // Remove trailing comma
+    // Prevent index out of bounds error
+    if (out.isNotEmpty) {
+      out = out.substring(0, out.length - 1); // Remove trailing comma
+    }
+    return out;
   }
 
   void _sort() => _recipes.sort((a, b) => _sortMetric(a, b) * _sortOrder);
